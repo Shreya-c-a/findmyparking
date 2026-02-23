@@ -1,5 +1,40 @@
-<form method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <button type="submit">Signup</button>
-</form>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center signup-container">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="card signup-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="mb-2 emoji-icon">🚀</div>
+                    <h2 class="fw-bold text-dark">Get Started</h2>
+                    <p class="text-muted small">Join FindMyParking community today</p>
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary ps-1">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger mt-1 error-text">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-gradient w-100 mt-4 shadow-sm">
+                        Create My Account
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-2">
+                    <p class="small text-muted">Already a member? <a href="#" class="text-primary fw-bold text-decoration-none">Log In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
