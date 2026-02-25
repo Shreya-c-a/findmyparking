@@ -1,99 +1,77 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-
-:root {
-    --primary-color: #6366f1;
-    --secondary-color: #a855f7;
-    --glass-bg: rgba(255, 255, 255, 0.7);
-}
-
 body {
-    font-family: 'Poppins', sans-serif;
-    /* Animated Gradient Background */
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: linear-gradient(-45deg, #f8faff, #eef2ff, #f5f3ff);
     background-size: 400% 400%;
-    animation: gradientAnimation 15s ease infinite;
-    min-height: 100vh;
-    margin: 0;
+    animation: gradientBG 15s ease infinite;
 }
 
-@keyframes gradientAnimation {
+@keyframes gradientBG {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-/* Floating Glass Navbar */
 .navbar {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    margin: 15px 25px;
-    border-radius: 20px;
-    padding: 10px 20px;
 }
 
-.navbar-brand {
-    font-weight: 700;
-    font-size: 1.5rem;
-    background: linear-gradient(to right, #4f46e5, #9333ea);
+.brand-text {
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-/* Signup Card - Advanced Glassmorphism */
-.signup-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 30px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    transition: transform 0.3s ease;
-}
-
-.signup-card:hover {
-    transform: translateY(-5px);
-}
-
-/* Modern Inputs */
-.form-control, select {
-    border: 2px solid transparent;
-    background: #f3f4f6;
-    border-radius: 12px;
-    padding: 12px 15px;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    background: #fff;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-}
-
-/* Gradient Button */
 .btn-gradient {
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
     color: white;
     border: none;
     border-radius: 12px;
     font-weight: 600;
-    padding: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+    transition: 0.3s;
 }
 
 .btn-gradient:hover {
-    transform: scale(1.02);
-    box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
     color: white;
 }
-/* Logo animation */
-.navbar-brand span {
-    display: inline-block;
-    animation: bounce 2s infinite;
+
+.footer {
+    background: rgba(255, 255, 255, 0.9);
+    border-top: 1px solid #eef2ff;
+}body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #ffffff;
+    color: #333;
 }
 
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+.navbar-brand .brand-text {
+    font-family: 'Arial Black', sans-serif;
+}
+
+.nav-link {
+    color: #444 !important;
+    font-size: 0.95rem;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: #198754 !important;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.hero-section h1 {
+    line-height: 1.1;
+    letter-spacing: -1px;
+}
+
+.hero-section p {
+    font-size: 1.1rem;
+    line-height: 1.6;
 }

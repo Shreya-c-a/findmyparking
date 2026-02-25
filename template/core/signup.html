@@ -1,40 +1,54 @@
-{% extends 'base.html' %}
+<script src="https://cdn.tailwindcss.com"></script>
 
-{% block content %}
-<div class="row justify-content-center align-items-center signup-container">
-    <div class="col-md-6 col-lg-5 col-xl-4">
-        <div class="card signup-card">
-            <div class="card-body p-4 p-md-5">
-                <div class="text-center mb-4">
-                    <div class="mb-2 emoji-icon">🚀</div>
-                    <h2 class="fw-bold text-dark">Get Started</h2>
-                    <p class="text-muted small">Join FindMyParking community today</p>
-                </div>
+<div class="min-h-screen flex items-center justify-center bg-white p-8 font-sans">
+    <div class="w-full max-w-md">
+        <div class="mb-10">
+            <a href="/" class="text-black" title="Go back">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </a>
+        </div>
+        <h1 class="text-4xl font-extrabold mb-12 text-gray-900">Sign up</h1>
 
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary ps-1">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}
-                                <div class="text-danger mt-1 error-text">
-                                    {{ field.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
+        {% if form.non_field_errors %}
+            <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                {% for error in form.non_field_errors %}
+                    <p class="text-red-600 font-bold text-sm">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="flex flex-col">
+                <label class="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 ml-1">
+                    {{ field.label }}
+                </label>
+                
+                {{ field }}
+
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <p class="text-red-500 text-xs font-bold mt-2 ml-1 italic">
+                            * {{ error }}
+                        </p>
                     {% endfor %}
+                {% endif %}
+            </div>
+            {% endfor %}
 
                     <button type="submit" class="btn btn-gradient w-100 mt-4 shadow-sm">
                         Create My Account
                     </button>
                 </form>
 
-                <div class="text-center mt-4 pt-2">
-                    <p class="small text-muted">Already a member? <a href="#" class="text-primary fw-bold text-decoration-none">Log In</a></p>
-                </div>
-            </div>
+        <div class="mt-16 text-center">
+            <p class="text-gray-500 text-lg">Already have an account? 
+                <a href="{% url 'login' %}" class="text-black font-extrabold ml-1 border-b-2 border-black">Sign in</a>
+            </p>
         </div>
     </div>
 </div>
-{% endblock %}

@@ -1,0 +1,30 @@
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="min-h-screen flex items-center justify-center bg-white p-8 font-sans text-gray-900">
+    <div class="w-full max-w-md">
+        <h1 class="text-4xl font-extrabold mb-4 text-center">Welcome Back</h1>
+        <p class="text-gray-500 text-center mb-12 text-lg">Sign in to continue parking</p>
+
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="flex flex-col">
+                <label class="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 ml-1">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full bg-black text-white py-5 rounded-2xl text-xl font-bold mt-10 transition shadow-lg active:scale-95">
+                Sign in
+            </button>
+        </form>
+
+        <div class="mt-16 text-center">
+            <p class="text-gray-500 text-lg">Don't have an account? 
+                <a href="{% url 'signup' %}" class="text-black font-extrabold ml-1 border-b-2 border-black">Sign up</a>
+            </p>
+        </div>
+    </div>
+</div>
