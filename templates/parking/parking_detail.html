@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ parking_lot.name }} - FindMyParking{% endblock %}
+
+{% block content %}
+<div class="premium-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+        <a href="{% url 'parking_list' %}" class="hover:text-brand-600 transition">Parking</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        <span class="text-gray-900 font-medium">{{ parking_lot.name }}</span>
+    </nav>
+
+    <!-- Hero Image Gallery -->
+    <div class="grid md:grid-cols-3 gap-3 mb-8 rounded-3xl p-2 bg-white/70 border border-gray-100 shadow-card">
+        <div class="md:col-span-2 h-64 md:h-80 relative overflow-hidden rounded-2xl border border-gray-100 bg-slate-100">
+            <img src="{% static detail_gallery_images.0 %}?v=20260321" alt="{{ parking_lot.name }}" class="block w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+        </div>
+        <div class="hidden md:grid grid-rows-2 gap-3">
+            <div class="relative overflow-hidden h-40 md:h-[154px] rounded-2xl border border-gray-100 bg-slate-100">
+                <img src="{% static detail_gallery_images.1 %}?v=20260321" alt="{{ parking_lot.name }}" class="block w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700">
+            </div>
+            <div class="relative overflow-hidden h-40 md:h-[154px] rounded-2xl border border-gray-100 bg-slate-100">
+                <img src="{% static detail_gallery_images.2 %}?v=20260321" alt="{{ parking_lot.name }}" class="block w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700">
+            </div>
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Main Info -->
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="premium-title text-3xl font-black text-gray-900 mb-2">{{ parking_lot.name }}</h1>
+                <p class="text-gray-500 flex items-center gap-2 text-sm">
+                    <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    {{ parking_lot.location }}
+                </p>
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ parking_lot.location|urlencode }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-ocean-500 text-white rounded-xl text-xs font-semibold hover:bg-ocean-600 transition">
+                    <span>🗺️</span>
+                    Get Directions
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-brand-50 rounded-2xl p-4 text-center">
+                    <div class="text-2xl font-black text-brand-700">{{ parking_lot.total_slots }}</div>
+                    <div class="text-xs text-brand-600 font-medium mt-1">Total Slots</div>
+                </div>
+                <div class="bg-emerald-50 rounded-2xl p-4 text-center">
+                    <div class="text-2xl font-black text-emerald-700">{{ parking_lot.available_slots }}</div>
+                    <div class="text-xs text-emerald-600 font-medium mt-1">Available</div>
+                </div>
+                <div class="bg-amber-50 rounded-2xl p-4 text-center">
+                    <div class="text-2xl font-black text-amber-700">{{ occupied }}</div>
+                    <div class="text-xs text-amber-600 font-medium mt-1">Occupied</div>
+                </div>
+            </div>
+
+            <!-- Slots Grid -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Available Slots</h2>
+                    {% if user.is_authenticated and user.role == 'owner' %}
+                    <a href="{% url 'add_slot' parking_lot.pk %}" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition">+ Add Slot</a>
+                    {% endif %}
+                </div>
+
+                <!-- Filter tabs -->
+                <div class="flex gap-2 mb-5 overflow-x-auto pb-2">
+                    <a href="{% url 'parking_detail' parking_lot.pk %}" class="px-4 py-2 rounded-full text-sm font-medium {% if not request.GET.type %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition whitespace-nowrap">All Slots</a>
+                    <a href="{% url 'slot_list' parking_lot.pk %}?type=REGULAR" class="px-4 py-2 rounded-full text-sm font-medium {% if request.GET.type == 'REGULAR' %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition whitespace-nowrap">Regular</a>
+                    <a href="{% url 'slot_list' parking_lot.pk %}?type=EV" class="px-4 py-2 rounded-full text-sm font-medium {% if request.GET.type == 'EV' %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition whitespace-nowrap">EV</a>
+                    <a href="{% url 'slot_list' parking_lot.pk %}?type=HANDICAP" class="px-4 py-2 rounded-full text-sm font-medium {% if request.GET.type == 'HANDICAP' %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition whitespace-nowrap">Handicap</a>
+                </div>
+
+                {% if slots %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {% for slot in slots %}
+                    <div class="group relative bg-white border-2 rounded-2xl p-4 text-center transition-all duration-200 hover:shadow-card
+                        {% if slot.status == 'AVAILABLE' %}border-brand-200 hover:border-brand-400
+                        {% elif slot.status == 'RESERVED' %}border-amber-200
+                        {% else %}border-red-200{% endif %}">
+                        <!-- Status dot -->
+                        <div class="w-2.5 h-2.5 rounded-full absolute top-3 right-3
+                            {% if slot.status == 'AVAILABLE' %}bg-brand-500
+                            {% elif slot.status == 'RESERVED' %}bg-amber-400
+                            {% else %}bg-red-400{% endif %}"></div>
+                        <!-- Icon -->
+                        <div class="text-2xl mb-2">
+                            {% if slot.status == 'AVAILABLE' %}🚗{% elif slot.status == 'RESERVED' %}🔒{% else %}⛔{% endif %}
+                        </div>
+                        <div class="font-bold text-gray-900 text-sm">{{ slot.slot_number }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5">{{ slot.get_slot_type_display }}</div>
+                        <div class="text-[10px] font-semibold mt-1.5 px-2 py-0.5 rounded-full inline-block
+                            {% if slot.status == 'AVAILABLE' %}bg-brand-100 text-brand-700
+                            {% elif slot.status == 'RESERVED' %}bg-amber-100 text-amber-700
+                            {% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ slot.get_status_display }}
+                        </div>
+                        {% if slot.status == 'AVAILABLE' and user.is_authenticated %}
+                        <a href="{% url 'reserve_slot' slot.pk %}" class="mt-3 block py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition opacity-0 group-hover:opacity-100">Reserve</a>
+                        {% elif slot.status == 'AVAILABLE' %}
+                        <a href="{% url 'login' %}" class="mt-3 block py-2 bg-gray-200 text-gray-600 rounded-xl text-xs font-semibold hover:bg-gray-300 transition opacity-0 group-hover:opacity-100">Login to Reserve</a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12 bg-gray-50 rounded-2xl">
+                    <p class="text-gray-500">No slots available for this lot.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-5">
+            <!-- Price Card -->
+            <div class="bg-white rounded-3xl border border-gray-100 shadow-card p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Pricing</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between py-3 border-b border-gray-50">
+                        <span class="text-sm text-gray-600">Hourly</span>
+                        <span class="font-bold text-gray-900">₹50 <span class="text-xs font-normal text-gray-400">/hr</span></span>
+                    </div>
+                    <div class="flex items-center justify-between py-3 border-b border-gray-50">
+                        <span class="text-sm text-gray-600">Daily</span>
+                        <span class="font-bold text-gray-900">₹500 <span class="text-xs font-normal text-gray-400">/day</span></span>
+                    </div>
+                    <div class="flex items-center justify-between py-3">
+                        <span class="text-sm text-gray-600">Monthly</span>
+                        <span class="font-bold text-gray-900">₹10,000 <span class="text-xs font-normal text-gray-400">/mo</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="bg-white rounded-3xl border border-gray-100 shadow-card p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Information</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center gap-3 text-gray-600">
+                        <svg class="w-5 h-5 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Open 24/7
+                    </div>
+                    <div class="flex items-center gap-3 text-gray-600">
+                        <svg class="w-5 h-5 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        CCTV Surveillance
+                    </div>
+                    <div class="flex items-center gap-3 text-gray-600">
+                        <svg class="w-5 h-5 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        EV Charging Available
+                    </div>
+                </div>
+            </div>
+
+            {% if user.is_authenticated and user.role == 'owner' %}
+            <div class="space-y-3">
+                <a href="{% url 'edit_parking' parking_lot.pk %}" class="block text-center py-3 border-2 border-brand-200 text-brand-600 rounded-2xl text-sm font-semibold hover:bg-brand-50 transition">
+                    ✏️ Edit Parking Lot
+                </a>
+                <form method="POST" action="{% url 'delete_parking' parking_lot.pk %}" onsubmit="return showConfirmModal('Delete Parking Lot', 'Are you sure you want to delete this parking lot? This will remove slots and related records.', this);">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-center py-3 border-2 border-red-200 text-red-600 rounded-2xl text-sm font-semibold hover:bg-red-50 transition">
+                        🗑️ Delete Parking Lot
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

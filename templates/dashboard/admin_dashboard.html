@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Admin Dashboard - FindMyParking{% endblock %}
+
+{% block content %}
+<div class="premium-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid lg:grid-cols-12 gap-6">
+        <aside class="lg:col-span-3">
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-4 lg:sticky lg:top-24">
+                <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider px-3 mb-3">Dashboard Menu</h2>
+                <nav class="space-y-1.5">
+                    <a href="{% url 'admin_dashboard' %}" class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-brand-50 text-brand-700 font-semibold text-sm">
+                        <span>Dashboard</span>
+                        <span>•</span>
+                    </a>
+                    {% if user.is_admin %}
+                    <a href="{% url 'add_parking' %}" class="block px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition">+ Add Parking</a>
+                    <a href="{% url 'parking_list' %}" class="block px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition">All Parking Lots</a>
+                    <a href="/admin/" class="block px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition">Django Admin</a>
+                    {% else %}
+                    <a href="{% url 'add_parking' %}" class="block px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition">+ Add Parking</a>
+                    <a href="{% url 'parking_list' %}" class="block px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition">My Parking Lots</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </aside>
+
+        <div class="lg:col-span-9">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+            <h1 class="premium-title text-3xl font-black text-gray-900 mb-1">{% if user.is_admin %}Admin Dashboard{% else %}Owner Dashboard{% endif %}</h1>
+            <p class="text-gray-500 text-sm">{{ analytics_scope|default:"Your parking analytics and management" }}</p>
+        </div>
+        <div class="flex gap-3 mt-4 md:mt-0">
+            {% if user.is_admin %}
+            <a href="{% url 'add_parking' %}" class="px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold text-sm hover:shadow-glow transition-all">+ Add Parking</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+        <div class="bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl p-5 text-white shadow-glow">
+            <div class="text-sm opacity-80 mb-1">Parking Lots</div>
+            <div class="text-3xl font-black">{{ total_lots }}</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5">
+            <div class="text-xs text-gray-500 mb-1">Total Slots</div>
+            <div class="text-3xl font-black text-gray-900">{{ total_slots }}</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5">
+            <div class="text-xs text-gray-500 mb-1">Reservations</div>
+            <div class="text-3xl font-black text-gray-900">{{ total_reservations }}</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5">
+            <div class="text-xs text-gray-500 mb-1">Active</div>
+            <div class="text-3xl font-black text-brand-600">{{ active_reservations }}</div>
+        </div>
+        <div class="bg-gradient-to-br from-emerald-500 to-brand-700 rounded-2xl p-5 shadow-glow col-span-2 lg:col-span-1 text-white">
+            <div class="text-xs text-emerald-50/90 mb-1">Revenue</div>
+            <div class="text-xl lg:text-2xl font-black tabular-nums whitespace-nowrap leading-tight">₹{{ total_revenue|floatformat:2|intcomma }}</div>
+        </div>
+    </div>
+
+    <!-- Recent Reservations -->
+    <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Recent Reservations</h2>
+        {% if recent_reservations %}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="premium-table w-full">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50/80">
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Code</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Parking</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Slot</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in recent_reservations %}
+                        <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                            <td class="px-5 py-3.5 text-sm font-medium text-gray-900">{{ res.reservation_code }}</td>
+                            <td class="px-5 py-3.5 text-sm text-gray-600">{{ res.user.full_name }}</td>
+                            <td class="px-5 py-3.5 text-sm text-gray-600">{{ res.slot.parking_lot.name }}</td>
+                            <td class="px-5 py-3.5 text-sm text-gray-600">{{ res.slot.slot_number }}</td>
+                            <td class="px-5 py-3.5 text-sm text-gray-600">{{ res.get_reservation_type_display }}</td>
+                            <td class="px-5 py-3.5">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase
+                                    {% if res.status == 'ACTIVE' %}bg-brand-100 text-brand-700{% elif res.status == 'EXPIRED' %}bg-gray-100 text-gray-600{% else %}bg-red-100 text-red-600{% endif %}">
+                                    {{ res.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5 text-sm text-gray-500">{{ res.start_time|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-gray-50 rounded-2xl p-8 text-center"><p class="text-gray-500">No reservations yet</p></div>
+        {% endif %}
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Audit Log</h2>
+        {% if recent_audit_logs %}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="premium-table w-full">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50/80">
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">When</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Actor</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Action</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Entity</th>
+                            <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in recent_audit_logs %}
+                        <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                            <td class="px-5 py-3.5 text-sm text-gray-500">{{ item.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="px-5 py-3.5 text-sm text-gray-700">{{ item.actor_email }}</td>
+                            <td class="px-5 py-3.5 text-sm font-medium text-gray-900">{{ item.action }}</td>
+                            <td class="px-5 py-3.5 text-sm text-gray-600">{{ item.entity }}{% if item.entity_id %} #{{ item.entity_id }}{% endif %}</td>
+                            <td class="px-5 py-3.5 text-sm text-gray-500">{{ item.details|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-gray-50 rounded-2xl p-8 text-center"><p class="text-gray-500">No audit activity yet</p></div>
+        {% endif %}
+    </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

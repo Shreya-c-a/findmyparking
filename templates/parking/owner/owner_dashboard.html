@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>OWNER DASHBAORD</h1>
+{{request.user.role}}
+{{request.user.name}}
+<p>{{request.user}}</p>
+{% endblock content %}

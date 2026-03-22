@@ -1,0 +1,47 @@
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top py-3">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center fw-bold text-success" href="/">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" class="me-2">
+                <circle cx="12" cy="12" r="10" fill="#198754"/>
+                <path d="M9 17V7H12.5C14.4 7 16 8.5 16 10.5C16 12.5 14.4 14 12.5 14H11V17H9Z" fill="white"/>
+            </svg>
+            <span style="letter-spacing: -1px; font-size: 1.5rem;">findmyparking</span>
+        </a>
+
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link px-3 fw-medium" href="{% url 'home' %}">Home</a></li>
+                <li class="nav-item"><a class="nav-link px-3 fw-medium" href="{% url 'parking_list' %}">Find Parking</a></li>
+                {% if user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link px-3 fw-medium" href="{% url 'my_reservations' %}">My Bookings</a></li>
+                {% if user.role == 'owner' %}
+                <li class="nav-item"><a class="nav-link px-3 fw-medium" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                {% endif %}
+                {% endif %}
+                <li class="nav-item"><a class="nav-link px-3 fw-medium" href="#about">About Us</a></li>
+            </ul>
+            <div class="d-flex gap-2">
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-success dropdown-toggle px-4 rounded-pill fw-bold" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ user.first_name|default:user.email }}
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="{% url 'user_dashboard' %}">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'my_reservations' %}">My Reservations</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-success px-4 rounded-pill fw-bold">Login</a>
+                <a href="{% url 'signup' %}" class="btn btn-success px-4 rounded-pill fw-bold">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

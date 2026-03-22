@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - FindMyParking{% endblock %}
+
+{% block content %}
+<div class="premium-shell max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <h1 class="premium-title text-3xl font-black text-gray-900 mb-1">Notifications</h1>
+    <p class="text-gray-500 text-sm mb-8">Stay updated with your parking activities</p>
+
+    {% if notifications %}
+    <div class="space-y-3">
+        {% for notif in notifications %}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5 hover:shadow-card-hover transition-all duration-200">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0
+                    {% if notif.notification_type == 'EMAIL' %}bg-ocean-400/10
+                    {% elif notif.notification_type == 'SMS' %}bg-brand-100
+                    {% else %}bg-teal-100{% endif %}">
+                    {% if notif.notification_type == 'EMAIL' %}📧
+                    {% elif notif.notification_type == 'SMS' %}📱
+                    {% else %}🔔{% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-800">{{ notif.message }}</p>
+                    <div class="flex items-center gap-3 mt-2">
+                        <span class="text-xs text-gray-400">{{ notif.created_at|date:"M d, Y H:i" }}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase
+                            {% if notif.status == 'SENT' %}bg-brand-100 text-brand-700
+                            {% elif notif.status == 'PENDING' %}bg-amber-100 text-amber-700
+                            {% else %}bg-red-100 text-red-600{% endif %}">
+                            {{ notif.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 bg-white rounded-3xl border border-gray-100">
+        <span class="text-6xl block mb-4">🔔</span>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No notifications</h3>
+        <p class="text-gray-500">Notifications about your bookings and payments will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

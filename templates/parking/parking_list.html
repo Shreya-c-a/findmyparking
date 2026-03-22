@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Find Parking - FindMyParking{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Fix for OSM Referrer Policy -->
+<meta name="referrer" content="strict-origin-when-cross-origin"> 
+<style>
+    #map { height: 420px; border-radius: 1.5rem; z-index: 1; }
+    .leaflet-popup-content-wrapper { border-radius: 1rem; padding: 0; }
+    .leaflet-popup-content { margin: 0; }
+    .parking-popup { padding: 14px 16px; min-width: 200px; }
+    .parking-popup h4 { font-weight: 700; font-size: 14px; margin: 0 0 4px; color: #111827; }
+    .parking-popup p { font-size: 12px; color: #6b7280; margin: 0 0 8px; }
+    .parking-popup .badge { display: inline-block; background: #ecfdf5; color: #047857; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+    .parking-popup a { display: block; text-align: center; background: #10b981; color: #fff; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 10px; text-decoration: none; margin-top: 8px; }
+    .parking-popup a:hover { background: #059669; }
+    .custom-marker { background: none; border: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="premium-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Header & Search -->
+    <div class="mb-8">
+        <h1 class="premium-title text-3xl md:text-4xl font-black text-gray-900 mb-2">Find Parking</h1>
+        <p class="text-gray-500 mb-6">Discover parking spots across Ahmedabad</p>
+
+        <form method="GET" class="flex flex-col sm:flex-row gap-3">
+            <div class="flex-1 relative">
+                <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by name or location…" id="search-parking" class="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none transition-all">
+            </div>
+            <select name="sort" onchange="this.form.submit()" class="px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm text-gray-700 outline-none cursor-pointer">
+                <option value="">Sort by</option>
+                <option value="availability" {% if sort == 'availability' or request.GET.sort == 'availability' %}selected{% endif %}>Most Available</option>
+                <option value="name" {% if sort == 'name' or request.GET.sort == 'name' %}selected{% endif %}>Name A-Z</option>
+            </select>
+            <button type="submit" class="px-8 py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-semibold text-sm hover:shadow-glow transition-all">
+                Search
+            </button>
+        </form>
+    </div>
+
+    <!-- ═══════════ MAP ═══════════ -->
+    <div class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-brand-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">Parking Map — Ahmedabad</h2>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-500">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-brand-500 rounded-full inline-block"></span> Available</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-coral-500 rounded-full inline-block"></span> Full</span>
+            </div>
+        </div>
+        <div id="map" class="shadow-card border border-gray-100"></div>
+    </div>
+
+    <!-- ═══════════ PARKING CARDS ═══════════ -->
+    {% if parking_lots %}
+    <p class="text-sm text-gray-500 mb-6">Showing <span class="font-semibold text-gray-900">{{ parking_lots|length }}</span> parking lots</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for parking in parking_lots %}
+        <a href="{% url 'book_parking' parking.pk %}" class="group block bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1" data-parking-card data-name="{{ parking.name }}" data-location="{{ parking.location }}">
+            <div class="relative h-48 overflow-hidden">
+                <img
+                    src="{% static 'images/parking_1.png' %}?v=20260321"
+                    loading="lazy"
+                    decoding="async"
+                    data-seq="{{ forloop.counter0 }}"
+                    onerror="this.onerror=null;this.src='{% static 'images/parking_2.png' %}?v=20260321';"
+                    alt="{{ parking.name }}"
+                    class="parking-card-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                <div class="absolute top-3 left-3">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold {% if parking.available_slots > 0 %}text-brand-700{% else %}text-coral-500{% endif %}">
+                        <span class="w-1.5 h-1.5 rounded-full {% if parking.available_slots > 0 %}bg-brand-500{% else %}bg-coral-500{% endif %}"></span>
+                        {{ parking.available_slots }} free
+                    </span>
+                </div>
+                <div class="absolute top-3 right-3">
+                    <span class="px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-full text-xs font-semibold text-white">₹50/hr</span>
+                </div>
+                <div class="absolute bottom-3 left-3 right-3">
+                    <p class="text-white text-xs font-medium flex items-center gap-1.5 truncate">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        {{ parking.location|truncatechars:40 }}
+                    </p>
+                </div>
+            </div>
+            <div class="p-5">
+                <h3 class="font-bold text-gray-900 text-[17px] mb-2 group-hover:text-brand-600 transition-colors">{{ parking.name }}</h3>
+                <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <span class="text-xs text-gray-500">{{ parking.total_slots }} total slots</span>
+                    <span class="flex items-center gap-1 text-brand-600 text-sm font-semibold">
+                        View Details
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div id="no-db-results" class="text-center py-16 bg-white rounded-3xl border border-gray-100">
+        <span class="text-6xl block mb-4">🔍</span>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No parking lots found</h3>
+        <p class="text-gray-500 mb-6">Try a different search term or browse all locations.</p>
+        <a href="{% url 'parking_list' %}" class="px-6 py-3 bg-brand-600 text-white rounded-xl font-semibold text-sm hover:bg-brand-700 transition">View All</a>
+    </div>
+    {% endif %}
+
+    <div id="static-results-wrapper" class="hidden mt-10">
+        <p class="text-sm text-gray-500 mb-6">Showing <span id="static-results-count" class="font-semibold text-gray-900">0</span> parking suggestions</p>
+        <div id="static-results-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // ── Initialize Map — centered on Ahmedabad ──
+    const map = L.map('map', {
+        zoomControl: true,
+        scrollWheelZoom: true
+    }).setView([23.0225, 72.5714], 13);
+
+    // ── OpenStreetMap tiles with correct attribution ──
+    const tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    L.tileLayer(tileUrl, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+    }).addTo(map);
+
+    // ── Custom marker icon ──
+    function createMarkerIcon(available) {
+        const color = available > 0 ? '#10b981' : '#f43f5e';
+        return L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="position:relative">
+                <svg width="36" height="46" viewBox="0 0 36 46" fill="none">
+                    <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 28 18 28s18-14.5 18-28C36 8.06 27.94 0 18 0z" fill="${color}"/>
+                    <circle cx="18" cy="17" r="8" fill="white" opacity="0.9"/>
+                    <text x="18" y="21" text-anchor="middle" font-size="12" font-weight="700" fill="${color}">P</text>
+                </svg>
+            </div>`,
+            iconSize: [36, 46],
+            iconAnchor: [18, 46],
+            popupAnchor: [0, -42],
+        });
+    }
+
+    // ── Well-known Ahmedabad parking locations (based on real locations) ──
+    const ahmedabadParkingSpots = [
+        { name: "Ahmedabad Railway Station Parking", location: "Kalupur Station, Ahmedabad", lat: 23.0245, lng: 72.6009, slots: 200, available: 85 },
+        { name: "Sardar Vallabhbhai Patel Airport Parking", location: "Ahmedabad International Airport", lat: 23.0735, lng: 72.6266, slots: 500, available: 120 },
+        { name: "ISCON Mall Multi-Level Parking", location: "Satellite Road, Ahmedabad", lat: 23.0296, lng: 72.5079, slots: 800, available: 245 },
+        { name: "CG Road Commercial Parking", location: "CG Road, Navrangpura", lat: 23.0326, lng: 72.5606, slots: 150, available: 67 },
+        { name: "Manek Chowk Public Parking", location: "Manek Chowk, Old City", lat: 23.0258, lng: 72.5873, slots: 100, available: 23 },
+        { name: "Law Garden Event Parking", location: "Law Garden, Ellis Bridge", lat: 23.0310, lng: 72.5566, slots: 120, available: 45 },
+        { name: "Vastrapur Lake Recreational Parking", location: "Vastrapur, West Ahmedabad", lat: 23.0383, lng: 72.5230, slots: 180, available: 92 },
+        { name: "Sabarmati Riverfront Parking", location: "Sabarmati Riverfront, Ahmedabad", lat: 23.0465, lng: 72.5780, slots: 300, available: 156 },
+        { name: "Prahlad Nagar Shopping Parking", location: "Prahlad Nagar, Ahmedabad", lat: 23.0120, lng: 72.5120, slots: 250, available: 134 },
+        { name: "Science City Exhibition Parking", location: "Science City Road, Sola", lat: 23.0700, lng: 72.5110, slots: 600, available: 387 },
+        { name: "Bopal Residential Parking", location: "Bopal, South Ahmedabad", lat: 22.9880, lng: 72.4750, slots: 90, available: 52 },
+        { name: "Paldi Business District Parking", location: "Paldi, Ahmedabad", lat: 23.0130, lng: 72.5620, slots: 140, available: 78 },
+        { name: "SG Highway Corporate Parking", location: "SG Highway, Ahmedabad", lat: 23.0300, lng: 72.5070, slots: 220, available: 98 },
+        { name: "Thaltej Tech Park Parking", location: "Thaltej, Ahmedabad", lat: 23.0500, lng: 72.5000, slots: 160, available: 89 },
+        { name: "Memnagar Market Parking", location: "Memnagar, Ahmedabad", lat: 23.0450, lng: 72.5350, slots: 80, available: 34 },
+        { name: "Gota Industrial Parking", location: "Gota, Ahmedabad", lat: 23.1000, lng: 72.5400, slots: 120, available: 67 },
+        { name: "Chandkheda Residential Parking", location: "Chandkheda, Ahmedabad", lat: 23.1100, lng: 72.5900, slots: 100, available: 56 },
+        { name: "Drive In Cinema Parking", location: "Drive In Road, Ahmedabad", lat: 23.0400, lng: 72.5350, slots: 200, available: 145 },
+        { name: "Ashram Road Cultural Parking", location: "Ashram Road, Ahmedabad", lat: 23.0360, lng: 72.5700, slots: 90, available: 41 },
+        { name: "Ellis Bridge Heritage Parking", location: "Ellis Bridge, Ahmedabad", lat: 23.0320, lng: 72.5600, slots: 70, available: 28 },
+    ];
+
+    // ── Add markers from DB parking lots ──
+    const dbParkingLots = [
+        {% for parking in parking_lots %}
+        { 
+            name: "{{ parking.name|escapejs }}", 
+            location: "{{ parking.location|escapejs }}", 
+            id: {{ parking.pk }},
+            total: {{ parking.total_slots }},
+            available: {{ parking.available_slots }},
+            lat: {% if parking.map_lat is not None %}{{ parking.map_lat }}{% else %}null{% endif %},
+            lng: {% if parking.map_lng is not None %}{{ parking.map_lng }}{% else %}null{% endif %}
+        },
+        {% endfor %}
+    ];
+
+    const hasDbLots = dbParkingLots.length > 0;
+    const fallbackImages = [
+        '{% static "images/car.jpg" %}?v=20260321',
+        '{% static "images/car2.jpg" %}?v=20260321',
+        '{% static "images/car3.jpg" %}?v=20260321',
+        '{% static "images/car4.jpg" %}?v=20260321',
+        '{% static "images/car5.jpg" %}?v=20260321',
+        '{% static "images/car6.jpg" %}?v=20260321',
+        '{% static "images/car7.jpg" %}?v=20260321',
+        '{% static "images/car8.jpg" %}?v=20260321',
+        '{% static "images/car9.jpg" %}?v=20260321',
+        '{% static "images/car10.jpg" %}?v=20260321',
+        '{% static "images/car11.jpg" %}?v=20260321',
+        '{% static "images/car12.jpg" %}?v=20260321',
+        '{% static "images/car13.jpg" %}?v=20260321',
+        '{% static "images/car14.jpg" %}?v=20260321',
+        '{% static "images/car15.jpg" %}?v=20260321',
+        '{% static "images/car16.jpg" %}?v=20260321',
+        '{% static "images/car17.jpg" %}?v=20260321',
+        '{% static "images/car18.png" %}?v=20260321',
+        '{% static "images/car19.jpg" %}?v=20260321',
+        '{% static "images/car20.jpg" %}?v=20260321',
+        '{% static "images/car21.jpg" %}?v=20260321',
+        '{% static "images/car22.jpg" %}?v=20260321'
+    ];
+
+    function getFallbackImage(index) {
+        if (index < fallbackImages.length) {
+            return fallbackImages[index];
+        }
+        return fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+    }
+
+    // Assign card images from verified static URLs (first 22 unique, remaining random).
+    (function assignParkingCardImages() {
+        const cards = document.querySelectorAll('.parking-card-image');
+        cards.forEach((img) => {
+            const card = img.closest('[data-parking-card]');
+            const lotLocation = ((card && card.dataset.location) || '').toLowerCase();
+
+            // Force a known-good image for locations that looked blank in testing.
+            if (lotLocation.includes('ambawadi')) {
+                img.src = '{% static "images/car9.jpg" %}?v=20260321';
+                return;
+            }
+
+            const seq = Number(img.dataset.seq || '0');
+            const source = seq < fallbackImages.length
+                ? fallbackImages[seq]
+                : fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+            img.src = source;
+        });
+    })();
+
+    function normalizeText(value) {
+        return (value || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    // ── Resolve best booking URL for static spots ──
+    function getBookingUrlForSpot(spot, index = 0) {
+        if (spot && spot.id) {
+            return `/parking/${spot.id}/book/`;
+        }
+
+        const spotName = normalizeText(spot.name);
+        const spotLocation = normalizeText(spot.location);
+
+        let matchedLot = null;
+        let bestScore = -1;
+
+        dbParkingLots.forEach(lot => {
+            const lotName = normalizeText(lot.name);
+            const lotLocation = normalizeText(lot.location);
+            let score = 0;
+
+            if (lotName && spotName && (lotName.includes(spotName) || spotName.includes(lotName))) {
+                score += 4;
+            }
+            if (lotLocation && spotLocation && (lotLocation.includes(spotLocation) || spotLocation.includes(lotLocation))) {
+                score += 4;
+            }
+
+            const spotTokens = (spotName + ' ' + spotLocation).split(' ').filter(Boolean);
+            const lotText = lotName + ' ' + lotLocation;
+            spotTokens.forEach(token => {
+                if (token.length >= 4 && lotText.includes(token)) {
+                    score += 1;
+                }
+            });
+
+            if (score > bestScore) {
+                bestScore = score;
+                matchedLot = lot;
+            }
+        });
+
+        if (matchedLot && bestScore > 0) {
+            return `/parking/${matchedLot.id}/book/`;
+        }
+
+        if (hasDbLots) {
+            // Distribute unmatched static spots across real lots instead of sending all to first lot.
+            const fallbackIndex = Math.abs(index) % dbParkingLots.length;
+            return `/parking/${dbParkingLots[fallbackIndex].id}/book/`;
+        }
+
+        return `/parking/`;
+    }
+
+    const locationCoords = {
+        'sg highway': [23.0300, 72.5070],
+        'satellite': [23.0296, 72.5079],
+        'manek chowk': [23.0258, 72.5873],
+        'cg road': [23.0326, 72.5606],
+        'navrangpura': [23.0326, 72.5606],
+        'iscon': [23.0296, 72.5079],
+        'kalupur': [23.0245, 72.6009],
+        'railway': [23.0245, 72.6009],
+        'airport': [23.0735, 72.6266],
+        'vastrapur': [23.0383, 72.5230],
+        'sabarmati': [23.0465, 72.5780],
+        'riverfront': [23.0465, 72.5780],
+        'prahlad nagar': [23.0120, 72.5120],
+        'science city': [23.0700, 72.5110],
+        'sola': [23.0700, 72.5110],
+        'law garden': [23.0310, 72.5566],
+        'ellis bridge': [23.0320, 72.5600],
+        'bopal': [22.9880, 72.4750],
+        'paldi': [23.0130, 72.5620],
+        'thaltej': [23.0500, 72.5000],
+        'memnagar': [23.0450, 72.5350],
+        'gota': [23.1000, 72.5400],
+        'sarkhej': [22.9892, 72.4990],
+        'chandkheda': [23.1100, 72.5900],
+        'drive in': [23.0400, 72.5350],
+        'ashram road': [23.0360, 72.5700],
+        'bodakdev': [23.0356, 72.5066],
+        'gandhinagar': [23.2156, 72.6369],
+        'sanand': [22.9900, 72.3800],
+        'dholera': [22.2500, 72.1900],
+        'ahmedabad': [23.0225, 72.5714],
+    };
+
+    function resolveCoords(locationText, index) {
+        const locLower = (locationText || '').toLowerCase();
+        for (const [key, val] of Object.entries(locationCoords)) {
+            if (locLower.includes(key)) {
+                return val;
+            }
+        }
+
+        const offset = index * 0.004;
+        return [23.0225 + offset * Math.cos(index), 72.5714 + offset * Math.sin(index)];
+    }
+
+    const mapSpots = hasDbLots
+        ? dbParkingLots.map((lot, index) => {
+            const hasCoords = lot.lat !== null && lot.lng !== null;
+            const coords = hasCoords ? [Number(lot.lat), Number(lot.lng)] : resolveCoords(lot.location, index);
+            return {
+                ...lot,
+                lat: coords[0],
+                lng: coords[1],
+                slots: lot.total,
+            };
+        })
+        : ahmedabadParkingSpots;
+
+    // ── Search functionality ──
+    let allMarkers = [];
+    let visibleMarkers = [];
+
+    function getPricePerHour(availableSlots) {
+        if (availableSlots > 150) return 70;
+        if (availableSlots > 80) return 60;
+        return 50;
+    }
+
+    // Store all markers
+    mapSpots.forEach(spot => {
+        const marker = L.marker([spot.lat, spot.lng], {
+            icon: createMarkerIcon(spot.available)
+        }).addTo(map);
+
+        marker.spot = spot; // Store spot data
+        allMarkers.push(marker);
+
+        const bookingUrl = getBookingUrlForSpot(spot, 0);
+
+        marker.bindPopup(`
+            <div class="parking-popup">
+                <h4>${spot.name}</h4>
+                <p>📍 ${spot.location}</p>
+                <p>🕒 Open: 24/7</p>
+                <p>💰 ₹${getPricePerHour(spot.available)}/hr</p>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span class="badge">${spot.available} / ${spot.slots} slots available</span>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                    <a href="${bookingUrl}" style="flex:1;text-align:center;background:#10b981;color:#fff;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;text-decoration:none;">View & Book →</a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}" target="_blank" style="background:#4285f4;color:#fff;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;text-decoration:none;">🗺️ Directions</a>
+                </div>
+            </div>
+        `);
+    });
+
+    // ── Search function ──
+    function filterParkingSpots(searchTerm) {
+        const term = searchTerm.toLowerCase();
+        
+        visibleMarkers.forEach(marker => map.removeLayer(marker));
+        visibleMarkers = [];
+
+        allMarkers.forEach(marker => {
+            const spot = marker.spot;
+            const matches = !term || 
+                spot.name.toLowerCase().includes(term) || 
+                spot.location.toLowerCase().includes(term);
+
+            if (matches) {
+                map.addLayer(marker);
+                visibleMarkers.push(marker);
+            }
+        });
+
+        // Adjust map bounds to show visible markers
+        if (visibleMarkers.length > 0) {
+            const group = new L.featureGroup(visibleMarkers);
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+
+        renderStaticSpotCards(term);
+    }
+
+    function renderStaticSpotCards(term) {
+        const wrapper = document.getElementById('static-results-wrapper');
+        const grid = document.getElementById('static-results-grid');
+        const count = document.getElementById('static-results-count');
+        const noDbResults = document.getElementById('no-db-results');
+
+        if (!wrapper || !grid || !count) {
+            return;
+        }
+
+        const normalizedTerm = (term || '').trim().toLowerCase();
+        let filtered = mapSpots.filter(spot => {
+            if (!normalizedTerm) {
+                return true;
+            }
+            return (
+                spot.name.toLowerCase().includes(normalizedTerm) ||
+                spot.location.toLowerCase().includes(normalizedTerm)
+            );
+        });
+
+        const sortValue = (document.querySelector('select[name="sort"]') || {}).value || '';
+        if (sortValue === 'availability') {
+            filtered = filtered.sort((a, b) => b.available - a.available);
+        } else if (sortValue === 'name') {
+            filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        const shouldShowStatic = filtered.length > 0 && (!hasDbLots || normalizedTerm.length > 0);
+        if (!shouldShowStatic) {
+            wrapper.classList.add('hidden');
+            if (noDbResults && !hasDbLots) {
+                noDbResults.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (noDbResults) {
+            noDbResults.classList.add('hidden');
+        }
+
+        count.textContent = String(filtered.length);
+
+        grid.innerHTML = filtered.map((spot, index) => {
+            const bookingUrl = getBookingUrlForSpot(spot, index);
+            const spotPrice = getPricePerHour(spot.available);
+            const imagePath = getFallbackImage(index);
+            return `
+                <a href="${bookingUrl}" class="group block bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${imagePath}" loading="lazy" decoding="async" alt="${spot.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                        <div class="absolute top-3 left-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-brand-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                                ${spot.available} free
+                            </span>
+                        </div>
+                        <div class="absolute top-3 right-3">
+                            <span class="px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-full text-xs font-semibold text-white">₹${spotPrice}/hr</span>
+                        </div>
+                        <div class="absolute bottom-3 left-3 right-3">
+                            <p class="text-white text-xs font-medium truncate">📍 ${spot.location}</p>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-gray-900 text-[17px] mb-2 group-hover:text-brand-600 transition-colors">${spot.name}</h3>
+                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="text-xs text-gray-500">${spot.slots} total slots</span>
+                            <span class="flex items-center gap-1 text-brand-600 text-sm font-semibold">View & Book</span>
+                        </div>
+                    </div>
+                </a>
+            `;
+        }).join('');
+
+        wrapper.classList.remove('hidden');
+    }
+
+    // ── Add search event listener ──
+    const searchInput = document.getElementById('search-parking');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            filterParkingSpots(e.target.value);
+        });
+
+        filterParkingSpots(searchInput.value || '');
+    }
+
+    // ── Locate user ──
+    map.locate({ setView: false, maxZoom: 15 });
+    map.on('locationfound', function(e) {
+        // Show user location marker
+        const userMarker = L.marker(e.latlng, {
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="width:16px;height:16px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(59,130,246,.5);"></div>',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+            })
+        }).addTo(map).bindPopup('📍 You are here (±' + Math.round(e.accuracy) + 'm)');
+        
+        // Center map to user location with reasonable zoom
+        map.setView(e.latlng, 15);
+    });
+    map.on('locationerror', function() {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            return;
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast-msg flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-card-hover text-sm font-medium border bg-white text-amber-700 border-amber-200';
+        toast.innerHTML = '<span class="flex-1">Location access denied. Enable GPS permissions to see your current location.</span><button class="text-gray-400 hover:text-gray-600 ml-2">&times;</button>';
+        toast.querySelector('button').addEventListener('click', function () { toast.remove(); });
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    });
+</script>
+{% endblock %}

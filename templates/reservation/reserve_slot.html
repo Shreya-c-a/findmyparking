@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Reserve Slot - FindMyParking{% endblock %}
+
+{% block content %}
+<div class="premium-shell reserve-slot-page max-w-2xl mx-auto px-4 py-10">
+    <div class="reserve-slot-card bg-white rounded-3xl shadow-card-hover border border-gray-100 p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <h1 class="premium-title text-2xl font-black text-gray-900">Reserve Parking Slot</h1>
+            <p class="text-gray-500 text-sm mt-1">{{ slot.parking_lot.name }} — Slot {{ slot.slot_number }}</p>
+        </div>
+
+        <!-- Slot Info -->
+        <div class="reserve-slot-info bg-gradient-to-r from-brand-50 to-teal-50 rounded-2xl p-5 mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div>
+                    <div class="text-xs text-gray-500 mb-0.5">Parking Lot</div>
+                    <div class="font-bold text-gray-900 text-sm">{{ slot.parking_lot.name }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 mb-0.5">Slot</div>
+                    <div class="font-bold text-gray-900 text-sm">{{ slot.slot_number }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 mb-0.5">Type</div>
+                    <div class="font-bold text-gray-900 text-sm" id="selected-slot-type-label">{{ selected_slot_type_label|default:slot.get_slot_type_display }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 mb-0.5">Available Slots</div>
+                    <div class="font-bold text-emerald-700 text-sm">{{ slot.parking_lot.available_slots }}</div>
+                </div>
+            </div>
+            <div class="reserve-slot-pricing mt-4 text-xs text-gray-600 bg-white/70 rounded-xl p-3 border border-brand-100">
+                <p>Timings: Open 24/7</p>
+                <p class="mt-1">Pricing: Hourly ₹{{ rate_map.HOURLY }}/hr, Daily ₹{{ rate_map.DAILY }}/day, Monthly ₹{{ rate_map.MONTHLY }}/month</p>
+            </div>
+        </div>
+
+        <form method="POST" class="space-y-5" id="reservation-form">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Slot Type</label>
+                <select name="slot_type" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none cursor-pointer transition-all">
+                    {% for type_code, type_label in available_slot_types %}
+                    <option value="{{ type_code }}" {% if selected_slot_type == type_code %}selected{% endif %}>{{ type_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Reservation Type</label>
+                <select name="reservation_type" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none cursor-pointer transition-all">
+                    <option value="HOURLY" {% if selected_reservation_type == 'HOURLY' %}selected{% endif %}>Hourly — ₹50/hr</option>
+                    <option value="DAILY" {% if selected_reservation_type == 'DAILY' %}selected{% endif %}>Daily — ₹500/day</option>
+                    <option value="MONTHLY" {% if selected_reservation_type == 'MONTHLY' %}selected{% endif %}>Monthly — ₹10,000/month</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Start Time</label>
+                <input type="datetime-local" name="start_time" required min="{{ min_end_time }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none transition-all" id="start-time">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">End Time</label>
+                <input type="datetime-local" name="end_time" required min="{{ min_end_time }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none transition-all" id="end-time">
+            </div>
+
+            <div class="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-800" id="estimated-amount-box">
+                Estimated Amount: <span class="font-bold" id="estimated-amount">₹{{ rate_map.HOURLY }}</span>
+            </div>
+
+            <button type="submit" onclick="return showConfirmModal('Confirm Reservation', 'Reserve slot {{ slot.slot_number }} at {{ slot.parking_lot.name }}?', this.form)" class="w-full py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold text-sm hover:shadow-glow transition-all duration-300">
+                Confirm Reservation
+            </button>
+        </form>
+
+        <a href="{% url 'parking_detail' slot.parking_lot.pk %}" class="block text-center text-sm text-gray-500 mt-5 hover:text-brand-600 transition">
+            ← Back to {{ slot.parking_lot.name }}
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const typeField = document.querySelector('select[name="reservation_type"]');
+        const slotTypeField = document.querySelector('select[name="slot_type"]');
+        const slotTypeLabel = document.getElementById('selected-slot-type-label');
+        const startField = document.getElementById('start-time');
+        const endField = document.getElementById('end-time');
+        const amountEl = document.getElementById('estimated-amount');
+
+        if (!typeField || !startField || !endField || !amountEl) {
+            return;
+        }
+
+        const rateMap = {
+            HOURLY: Number('{{ rate_map.HOURLY|default:50 }}'),
+            DAILY: Number('{{ rate_map.DAILY|default:500 }}'),
+            MONTHLY: Number('{{ rate_map.MONTHLY|default:10000 }}')
+        };
+
+        function computeAmount() {
+            const type = typeField.value || 'HOURLY';
+            const start = new Date(startField.value);
+            const end = new Date(endField.value);
+            const rate = rateMap[type] || 50;
+
+            if (!startField.value || !endField.value || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+                amountEl.textContent = `₹${rate.toFixed(2)}`;
+                return;
+            }
+
+            const hours = (end.getTime() - start.getTime()) / 3600000;
+            let units = 1;
+            if (type === 'MONTHLY') {
+                units = Math.max(1, Math.ceil(hours / (24 * 30)));
+            } else if (type === 'DAILY') {
+                units = Math.max(1, Math.ceil(hours / 24));
+            } else {
+                units = Math.max(1, Math.ceil(hours));
+            }
+
+            amountEl.textContent = `₹${(units * rate).toFixed(2)}`;
+        }
+
+        function syncSelectedSlotTypeLabel() {
+            if (!slotTypeField || !slotTypeLabel) {
+                return;
+            }
+            const selectedOption = slotTypeField.options[slotTypeField.selectedIndex];
+            if (selectedOption) {
+                slotTypeLabel.textContent = selectedOption.text;
+            }
+        }
+
+        typeField.addEventListener('change', computeAmount);
+        if (slotTypeField) {
+            slotTypeField.addEventListener('change', syncSelectedSlotTypeLabel);
+        }
+        startField.addEventListener('change', computeAmount);
+        endField.addEventListener('change', computeAmount);
+        computeAmount();
+        syncSelectedSlotTypeLabel();
+    })();
+</script>
+{% endblock %}

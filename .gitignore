@@ -1,0 +1,22 @@
+# Python cache and virtual env
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+venv/
+.env
+
+# Django runtime artifacts
+db.sqlite3
+media/
+
+# Collected static files (generated)
+staticfiles/
+
+# Tooling noise
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+Thumbs.db

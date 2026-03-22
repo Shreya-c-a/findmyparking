@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In - FindMyParking{% endblock %}
+
+{% block content %}
+<div class="auth-scene min-h-[85vh] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-3xl shadow-card-hover border border-gray-100 p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <a href="{% url 'home' %}" class="inline-flex items-center gap-2 mb-5">
+                    <div class="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-[14px] flex items-center justify-center shadow-md">
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    </div>
+                </a>
+                <h1 class="text-2xl font-black text-gray-900">Welcome back</h1>
+                <p class="text-sm text-gray-500 mt-1">Log in to your FindMyParking account</p>
+            </div>
+
+            {% if form.errors %}
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-5">
+                <p class="text-red-700 text-sm font-medium flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                    Invalid email or password. Please try again.
+                </p>
+            </div>
+            {% endif %}
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Email</label>
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <input type="email" name="email" placeholder="john@example.com" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Password</label>
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        <input type="password" name="password" id="login-password" placeholder="••••••••" required class="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none transition-all">
+                        <button type="button" onclick="togglePassword('login-password', this)" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-2 text-right">
+                        <a href="{% url 'password_reset' %}" class="text-xs font-semibold text-brand-600 hover:underline">Forgot password?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold text-sm hover:shadow-glow transition-all duration-300">
+                    Log In
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-gray-500 mt-6">
+                Don't have an account? <a href="{% url 'signup' %}" class="text-brand-600 font-semibold hover:underline">Sign up</a>
+            </p>
+            <p class="text-center text-xs text-gray-400 mt-3">
+                Admin? <a href="{% url 'admin_login' %}" class="text-gray-600 font-semibold hover:underline">Use admin login</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

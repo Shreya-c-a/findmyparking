@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Slots - {{ lot.name }} - FindMyParking{% endblock %}
+
+{% block content %}
+<div class="premium-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+        <a href="{% url 'parking_list' %}" class="hover:text-brand-600 transition">Parking</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        <a href="{% url 'parking_detail' lot.pk %}" class="hover:text-brand-600 transition">{{ lot.name }}</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="text-gray-900 font-medium">Slots</span>
+    </div>
+
+    <h1 class="premium-title text-2xl font-black text-gray-900 mb-6">{{ lot.name }} — Parking Slots</h1>
+
+    <!-- Filter -->
+    <div class="flex flex-wrap gap-2 mb-8">
+        <a href="{% url 'slot_list' lot.pk %}"
+            class="px-4 py-2 rounded-xl text-sm font-medium {% if not slot_type %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition">All</a>
+        <a href="{% url 'slot_list' lot.pk %}?type=REGULAR"
+            class="px-4 py-2 rounded-xl text-sm font-medium {% if slot_type == 'REGULAR' %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition">Regular</a>
+        <a href="{% url 'slot_list' lot.pk %}?type=EV"
+            class="px-4 py-2 rounded-xl text-sm font-medium {% if slot_type == 'EV' %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition">EV</a>
+        <a href="{% url 'slot_list' lot.pk %}?type=HANDICAP"
+            class="px-4 py-2 rounded-xl text-sm font-medium {% if slot_type == 'HANDICAP' %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition">Handicap</a>
+        <a href="{% url 'slot_list' lot.pk %}?status=DISABLED"
+            class="px-4 py-2 rounded-xl text-sm font-medium {% if status_filter == 'DISABLED' %}bg-brand-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} transition">Disabled</a>
+    </div>
+
+    <div class="rounded-3xl p-3 md:p-4 bg-white/70 border border-gray-100 shadow-card">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {% for slot in slots %}
+            <div
+            class="rounded-2xl border-2 p-4 md:p-5 text-center transition-all shadow-sm
+            {% if slot.status == 'AVAILABLE' %}border-green-200 bg-green-50 hover:shadow-lg{% elif slot.status == 'RESERVED' %}border-yellow-200 bg-yellow-50{% elif slot.status == 'DISABLED' %}border-slate-300 bg-slate-100{% else %}border-red-200 bg-red-50{% endif %}">
+            <div
+                class="text-lg font-bold {% if slot.status == 'AVAILABLE' %}text-green-700{% elif slot.status == 'RESERVED' %}text-yellow-700{% elif slot.status == 'DISABLED' %}text-slate-700{% else %}text-red-700{% endif %}">
+                {{ slot.slot_number }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">{{ slot.get_slot_type_display }}</div>
+            <div
+                class="mt-2 text-xs font-semibold px-2 py-1 rounded-full
+                {% if slot.status == 'AVAILABLE' %}bg-green-200 text-green-800{% elif slot.status == 'RESERVED' %}bg-yellow-200 text-yellow-800{% elif slot.status == 'DISABLED' %}bg-slate-200 text-slate-700{% else %}bg-red-200 text-red-800{% endif %}">
+                {{ slot.get_status_display }}
+            </div>
+            {% if slot.status == 'AVAILABLE' and user.is_authenticated %}
+            <a href="{% url 'reserve_slot' slot.pk %}"
+                class="mt-3 block text-xs font-semibold text-brand-600 hover:text-brand-800">Reserve →</a>
+            {% endif %}
+
+            {% if user.is_admin or user.role == 'owner' %}
+                {% if slot.status == 'AVAILABLE' or slot.status == 'DISABLED' %}
+                <form method="POST" action="{% url 'toggle_slot_status' lot.pk slot.pk %}" class="mt-2">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full py-1.5 rounded-lg text-xs font-semibold transition {% if slot.status == 'AVAILABLE' %}bg-slate-700 text-white hover:bg-slate-800{% else %}bg-emerald-600 text-white hover:bg-emerald-700{% endif %}">
+                        {% if slot.status == 'AVAILABLE' %}Disable{% else %}Enable{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="col-span-full py-16 text-center">
+            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5M9 3h6m0 0v3m0-3v-1.5a1.5 1.5 0 00-1.5-1.5h-3a1.5 1.5 0 00-1.5 1.5v1.5m0 0h6"></path>
+            </svg>
+            <p class="text-gray-500 font-medium">No slots available</p>
+            <p class="text-gray-400 text-sm mt-1">Try a different filter or check back later</p>
+        </div>
+        {% endfor %}
+    </div>
+    </div>
+</div>
+{% endblock %}

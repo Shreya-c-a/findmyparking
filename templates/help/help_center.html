@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Help Center - FindMyParking{% endblock %}
+
+{% block extra_head %}
+<style>
+    .help-section {
+        scroll-margin-top: 96px;
+        transition: box-shadow .25s ease, border-color .25s ease, transform .25s ease;
+    }
+
+    .help-section.is-highlighted {
+        border-color: rgba(16, 185, 129, 0.55) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+        transform: translateY(-2px);
+    }
+    html[data-theme='dark'] .help-section.is-highlighted {
+        border-color: rgba(110, 231, 183, 0.55) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.26);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="premium-shell max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-8">
+        <h1 class="premium-title text-3xl font-black text-gray-900 mb-2">Help Center</h1>
+        <p class="text-gray-500 text-sm">All support info for booking, payment, QR entry, refunds, privacy and terms.</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-8">
+        <a href="#booking" class="bg-white border border-gray-100 rounded-2xl p-5 shadow-card hover:shadow-card-hover transition">
+            <h3 class="font-bold text-gray-900">Booking Help</h3>
+            <p class="text-xs text-gray-500 mt-1">How to reserve, update, or cancel booking.</p>
+        </a>
+        <a href="#payment" class="bg-white border border-gray-100 rounded-2xl p-5 shadow-card hover:shadow-card-hover transition">
+            <h3 class="font-bold text-gray-900">Payment Help</h3>
+            <p class="text-xs text-gray-500 mt-1">Payment methods and common payment issues.</p>
+        </a>
+        <a href="#qr" class="bg-white border border-gray-100 rounded-2xl p-5 shadow-card hover:shadow-card-hover transition">
+            <h3 class="font-bold text-gray-900">QR Entry/Exit</h3>
+            <p class="text-xs text-gray-500 mt-1">What to do when QR scan does not work.</p>
+        </a>
+    </div>
+
+    <section id="booking" class="help-section bg-white border border-gray-100 rounded-2xl p-6 mb-5 shadow-card">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Booking</h2>
+        <ul class="space-y-2 text-sm text-gray-600">
+            <li>1. Go to Find Parking and select your preferred lot and slot.</li>
+            <li>2. Choose start and end time, then confirm reservation.</li>
+            <li>3. Complete payment to activate QR-based gate entry.</li>
+            <li>4. For cancellation, open My Reservations and click Cancel.</li>
+        </ul>
+    </section>
+
+    <section id="payment" class="help-section bg-white border border-gray-100 rounded-2xl p-6 mb-5 shadow-card">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Payment</h2>
+        <ul class="space-y-2 text-sm text-gray-600">
+            <li>1. Supported methods: Card, UPI, Wallet.</li>
+            <li>2. On successful payment, receipt and QR ticket are generated.</li>
+            <li>3. If payment fails, retry from My Reservations.</li>
+            <li>4. For charge issues, share reservation code with support team.</li>
+        </ul>
+    </section>
+
+    <section id="qr" class="help-section bg-white border border-gray-100 rounded-2xl p-6 mb-5 shadow-card">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">QR Entry / Exit</h2>
+        <ul class="space-y-2 text-sm text-gray-600">
+            <li>1. Show reservation QR at entry gate for check-in.</li>
+            <li>2. Show same QR at exit gate for checkout and completion.</li>
+            <li>3. If scan fails, use reservation code manually at gate scanner.</li>
+            <li>4. Entry works only after successful payment.</li>
+        </ul>
+    </section>
+
+    <section id="privacy" class="help-section bg-white border border-gray-100 rounded-2xl p-6 mb-5 shadow-card">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Privacy Policy (Short)</h2>
+        <p class="text-sm text-gray-600 leading-relaxed">
+            We use your account, booking, payment and gate activity data only for service delivery, security, and analytics.
+            We do not sell personal data. Access is role-based for admins/owners where required.
+        </p>
+    </section>
+
+    <section id="terms" class="help-section bg-white border border-gray-100 rounded-2xl p-6 mb-5 shadow-card">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Terms of Service (Short)</h2>
+        <p class="text-sm text-gray-600 leading-relaxed">
+            Bookings are subject to slot availability and payment success. Misuse of QR entry, duplicate bookings, or fraudulent
+            payments may lead to account restrictions. Timing and cancellation policies apply as shown in booking flow.
+        </p>
+    </section>
+
+    <section id="contact" class="help-section bg-gradient-to-r from-brand-500 to-brand-600 rounded-2xl p-6 text-white shadow-glow">
+        <h2 class="text-xl font-bold mb-3">Need more help?</h2>
+        <p class="text-sm text-white/90">Email: support@findmyparking.com</p>
+        <p class="text-sm text-white/90">Phone: +91 98765 43210</p>
+        <p class="text-xs text-white/75 mt-3">Include reservation code and booking date for faster support.</p>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const sections = Array.from(document.querySelectorAll('.help-section'));
+
+        function clearHighlights() {
+            sections.forEach((section) => section.classList.remove('is-highlighted'));
+        }
+
+        function highlightHashTarget() {
+            const hash = window.location.hash;
+            if (!hash) return;
+
+            const target = document.querySelector(hash);
+            if (!target || !target.classList.contains('help-section')) return;
+
+            clearHighlights();
+            target.classList.add('is-highlighted');
+            setTimeout(() => target.classList.remove('is-highlighted'), 2200);
+        }
+
+        document.addEventListener('DOMContentLoaded', highlightHashTarget);
+        window.addEventListener('hashchange', highlightHashTarget);
+    })();
+</script>
+{% endblock %}

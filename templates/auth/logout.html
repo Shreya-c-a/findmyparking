@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Logged Out - FindMyParking{% endblock %}
+
+{% block content %}
+<div class="premium-shell min-h-[70vh] flex items-center justify-center py-12 px-4">
+    <div class="premium-panel text-center p-8 max-w-md w-full">
+        <div
+            class="w-20 h-20 bg-gradient-to-br from-brand-100 to-brand-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <span class="text-4xl">👋</span>
+        </div>
+        <h1 class="premium-title text-3xl font-black text-gray-900 mb-3">You've been logged out</h1>
+        <p class="text-gray-500 mb-8 max-w-sm mx-auto">Thank you for using FindMyParking. See you again soon!</p>
+        <div class="flex gap-4 justify-center">
+            <a href="{% url 'login' %}"
+                class="px-8 py-3 bg-gradient-to-r from-brand-500 to-brand-700 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all">
+                Login Again
+            </a>
+            <a href="{% url 'home' %}"
+                class="px-8 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all">
+                Go Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
